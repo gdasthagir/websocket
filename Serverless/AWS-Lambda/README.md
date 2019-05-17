@@ -115,14 +115,14 @@ Note:
   - Deployment Stage: [New Stage]
   - Stage Name: *bridge*
   - Deploy
-- Copy the API Gateway URL from the dashboard example:  wss://aaabbbccc123.execute-api.region.amazonaws.com/bridge
+- Copy the API Gateway URL from the stages -- bridge example:  **wss://aaabbbccc123.execute-api.region.amazonaws.com/bridge**
 
 
 ### Testing Steps
 - Go to http://ws.truly.technology to test using WebSocket Client
-  - Enter Server URL as **"ws://url-from-api-gateway-dashboard/bridge?topicName=Something"**
+  - Enter Server URL as **"wss://url-from-api-gateway-stages-bridge/bridge?topicName=Something"**
   - Connect
-  - Type in your message push Send
+  - Type in your message *{"topic":"Something", "message":"Some Data"}* push Send
   - Disconnect when done
 
 ## Optional Items
