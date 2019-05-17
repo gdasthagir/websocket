@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html>
+    <head>
+    	<title>WebSocket Client</title>
+		<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+		
+		<script src="./websocketclient.js"></script>
+		
+		<style>
+		a:hover{
+		    text-decoration: none;
+		}
+		</style>
+       
+        <script type="text/javascript">
+        	var wsconnected = false;
+        	var client;
+        	
+        	function resetButtons(){
+        		document.getElementById("connectbutton").disabled=wsconnected;
+        		document.getElementById("disconnectbutton").disabled=!wsconnected;
+        		document.getElementById("sendbutton").disabled=!wsconnected;
+        	}
+        	
+        	var connectingMsg = "Connecting. Please wait...";
+        	function openConnection(){
+        		try{
+            		client = new WebSocketClient(document.getElementById('serverUrl').value, handleonopen, handleonmessage, handleonclose, handleonerror);
+                	client.connect();
+                	displayMessage(connectingMsg);
+        		}
+        		catch(err){
+        			console.error(err);
+        			displayMessage("Connection " + err);
+        		}
+        	}
+        	
+        	function closeConnection(){
+        		if(wsconnected == true){
+            		client.disconnect();
+        		}
+        	}
+        	
+        	function sendMessage(message){
+            	console.log("Status: " + client.getStatus() + ", Sending: " + message);
+        		displayMessage("out: " + message	);
+        		client.send(message);
+        	}
+        	
+        	function handleonopen(event){
+        		wsconnected = true;
+        		resetButtons();
+        		console.log('handleonopen: ' + JSON.stringify(event));
+        		//console.log(event);
+        		dispurl = (event && event.target && event.target.url) ? event.target.url : "";
+        		displayMessage("Connected. " + dispurl);
+        		clearConnectingMessage();
+        	}
+        	
+        	function handleonmessage(event){
+                var msg = event.data;
+                console.log('onmessage: ' + JSON.stringify(msg));
+        		//console.log(event);
+        		displayMessage("in: " + msg);
+        	}
+        	
+        	function handleonclose(event){
+        		wsconnected = false;
+        		resetButtons();
+        		console.log('handleonclose: ' + JSON.stringify(event));
+        		//console.log(event);
+        		
+        		dispurl = (event && event.target && event.target.url) ? event.target.url : "";
+        		if (event.code == 1000 || event.code == 1001 || event.code == 1005){
+            		displayMessage("Disconnected. "  + event.code + ": " + client.getDetailedReason(event) + ". " + dispurl);
+        		}
+        		else{
+        			displayMessage("Connection Error. " + event.code + ": " + client.getDetailedReason(event) + ". Check server and connectivity. " + dispurl);
+        		}
+        		displayMessage("");
+        		clearConnectingMessage();
+        	}
+        	
+        	function handleonerror(error){
+        		console.log('handleonerror: ' + JSON.stringify(error));
+        		clearConnectingMessage();
+        	}
+        	
+        	function displayMessage(msg){
+        		var textArea = document.getElementById('respmessage');
+        		textArea.value += msg + "\n" ;
+        		textArea.scrollTop = textArea.scrollHeight - textArea.clientHeight;
+        	}
+        	
+        	function clearConnectingMessage(){
+        		document.getElementById('respmessage').value = document.getElementById('respmessage').value.replace(connectingMsg + "\n", "");
+        	}
+        	
+        	function suggestServerUrl(){
+            	try{
+            		if(window.location.href.startsWith('http')){
+            			var _slash = window.location.href.endsWith('/') ? "" : "/" ;
+                		// use the following if you are serving this page from your websocket server 
+						document.getElementById('serverUrl').value = window.location.href.replace('/index.html', '').replace('http', 'ws') + _slash + "bridge?topicName=Something";
+						// if not just default to wss://echo.websocket.org
+						//document.getElementById('serverUrl').value = 'wss://echo.websocket.org';
+            		}
+            	}
+            	catch(err){
+            		console.error(err);
+            	}
+        	}
+        	
+        </script>
+    </head>
+
+    <body onload="suggestServerUrl()" onunload="closeConnection()">   
+    	<br>       
+        <div class="container card">
+            <h2>
+	            <a href="" target="_blank" title="Open another client in a new tab">+</a>
+	            <img width="32px" src="data:image/png;base64,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">
+	            WebSocket Client
+            </h2>
+            
+			<div class="row">
+				<div class="col-sm-8">
+	              <input type="text" name="serverUrl" id="serverUrl" class="form-control form-control-sm" required="true" placeholder="Enter the websocket server url (enter wss://echo.websocket.org if you don't have your server ready)" value="ws://server:port/context-root/socket-link?topicName=Something"/>
+				</div>
+				<div class="col-sm-2">
+	              <button id="connectbutton" class="btn btn-sm btn-info btn-block" onclick="openConnection()">
+	                  Connect
+	              </button>
+				</div>
+				<div class="col-sm-2">
+	              <button id="disconnectbutton" class="btn btn-sm btn-danger btn-block" onclick="closeConnection()" disabled=true>
+	                  Disconnect
+	              </button>
+				</div>
+			</div>
+			<hr>
+
+			<div class="row">
+				<div class="col-sm-10">
+             			<textarea name="message" id="message" class="form-control form-control-sm" rows="4" placeholder="WebSocket Message">{"topic":"Something", "message":"Some Data"}</textarea>                    
+				</div>
+				<div class="col-sm-2">
+	              <button id="sendbutton" class="btn btn-sm btn-primary btn-block" onclick="sendMessage(document.getElementById('message').value)" disabled=true>
+	                  Send
+	              </button>
+				</div>
+			</div>      
+			<br>  
+			
+			<div class="row">
+				<div class="col-sm-10">
+	              <textarea name="respmessage" id="respmessage" class="form-control form-control-sm" rows="12" placeholder="WebSocket Response" disabled=true></textarea>
+				</div>
+				<div class="col-sm-2">
+	              <button id="clearbutton" class="btn btn-sm btn-secondary btn-block" onclick="document.getElementById('respmessage').value = ''" >
+	                  Clear
+	              </button>
+				</div>
+			</div>
+			<br>
+        </div>
+    </body>
+</html>
