@@ -6,7 +6,7 @@ Topic based WebSocket Server implemented in Java, Node.js or AWS Lambda.
 Push content to Web Application UI based on events happening on the server, data coming from another instance of the UI or an IoT device etc.
 
 ** **
-## Java WeSocket Server
+## Java WebSocket Server
 Take a look at [Java/WSServer](Java/WSServer)
 
 
