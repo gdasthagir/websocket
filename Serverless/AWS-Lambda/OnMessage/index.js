@@ -2,7 +2,7 @@ const AWS = require('aws-sdk');
 const ddbDocClient = new AWS.DynamoDB.DocumentClient();
 const tableName = 'WSConnections';
 
-require('./apigwmgmtapi.2.455.0.js');
+//require('./apigwmgmtapi.2.455.0.js'); // dont need this if using latest AWS Lambda Runtime
 
 exports.handler =  (event, context, callback) => {
 
