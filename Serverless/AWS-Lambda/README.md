@@ -170,3 +170,4 @@ Note:
 ## Thanks
 
 * Appreciate everyone that tried, stumbled with the new WebSocket support in API Gateway and published their learnings.
+
