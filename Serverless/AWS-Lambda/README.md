@@ -35,31 +35,35 @@ Create 3 lambda functions to do the following. Create a WebSocket API Gateway to
   - Remove the entry from the DynamoDB (see [Disconnect/index.js](Disconnect/index.js))
 
 Note: 
-  - [OnMessage/index.js](OnMessage/index.js) uses AWS.ApiGatewayManagementApi
+  - [OnMessage/index.js](OnMessage/index.js) uses **AWS.ApiGatewayManagementApi**
   - AWS.ApiGatewayManagementApi is only available in the new versions of AWS-SDK
-  - Therefore is not available in AWS Lambda Runtimes at the time of writing this
-  - We have 2 options to get access to AWS.ApiGatewayManagementApi 
-    - Include declaration of  AWS.ApiGatewayManagementApi in your code (see [OnMessage/apigwmgmtapi.2.455.0.js](OnMessage/apigwmgmtapi.2.455.0.js))
-    - Create **Lambda Layer** with the new version of aws-sdk and refer that in your Lambda function ([see below](#Optional-Items))
+  - The latest update to Lambda has upgraded its runtime to include the latest AWS-SDK
+  - In case your functions does not have access to AWS.ApiGatewayManagementApi; 
+  - We have 2 options to get access to AWS.ApiGatewayManagementApi ([see below](#Optional-Items))
+    - Include declaration of  AWS.ApiGatewayManagementApi in your code
+    - Create **Lambda Layer** with the new version of aws-sdk and refer that in your Lambda function 
 
 ** **
 ## Detailed Steps
 
 0. **Create a role in IAM with proper policies to execute your lambda:**
-- [Console -- IAM](https://console.aws.amazon.com/iam/) -- Roles -- Create role. Attach the following policies and create
+- [Console -- IAM](https://console.aws.amazon.com/iam/) -- Roles -- Create role. 
+- Select Lambda
+- Attach the following policies (search for it by typing and press the check box)
   - AmazonAPIGatewayInvokeFullAccess
   - AmazonDynamoDBFullAccess
+- Give your role a name and Create
 
 1. **Create a table in DynamoDB to hold connection Ids and Topics:**
 - [Console -- DynamoDB](https://console.aws.amazon.com/dynamodb/) -- Create table. 
-  - Table Name: **_WSConnections_**
-  - Primary Key: **_connectionId_** (String)
+  - Table Name: "**_WSConnections_**"
+  - Primary Key: "**_connectionId_**" (String)
   - Create
 
 2. **Create the Connect Handler Lamda Function:**
 - [Console -- Lambda](https://console.aws.amazon.com/lambda/) -- Functions -- Create Function
-  - Function Name: *WSConnect*
-  - Language: *Node.js 8.10*
+  - Function Name: "**_WSConnect_**"
+  - Language: *Node.js 10.x* or *Node.js 8.10*
   - Expand *Choose or create an execution role*
   - Select *Use an existing role* and choose the one that was created earlier with dynamo and api gateway access
   - Copy and paste the code from [Connect/index.js](Connect/index.js)
@@ -67,8 +71,8 @@ Note:
 
 3. **Create the Disconnect Handler Lamda Function:**
 - [Console -- Lambda](https://console.aws.amazon.com/lambda/) -- Functions -- Create Function
-  - Function Name: *WSDisconnect*
-  - Language: *Node.js 8.10*
+  - Function Name: "**_WSDisconnect_**"
+  - Language: *Node.js 10.x* or *Node.js 8.10*
   - Expand *Choose or create an execution role*
   - Select *Use an existing role* and choose the one that was created earlier with dynamo and api gateway access
   - Copy and paste the code from [Disconnect/index.js](Disconnect/index.js)
@@ -76,44 +80,41 @@ Note:
 
 4. **Create the Message Handler Lamda Function:**
 - [Console -- Lambda](https://console.aws.amazon.com/lambda/) -- Functions -- Create Function
-  - Function Name: *WSOnMessage*
-  - Language: *Node.js 8.10*
+  - Function Name: "**_WSOnMessage_**"
+  - Language: *Node.js 10.x* or *Node.js 8.10*
   - Expand *Choose or create an execution role*
   - Select *Use an existing role* and choose the one that was created earlier with dynamo and api gateway access
   - Copy and paste the code from [OnMessage/index.js](OnMessage/index.js)
-  - In the editor **File -- New**
-  - Copy and paste the code from [OnMessage/apigwmgmtapi.2.455.0.js](OnMessage/apigwmgmtapi.2.455.0.js)
-  - Save the file **File -- Save** name apigwmgmtapi.2.455.0.js
   - Save
 
 5. **Create an API Gateway to wire the Connect, Disconnect and OnMessage functions:**
 - [Console -- API Gateway](https://console.aws.amazon.com/apigateway/) -- Create API
   - Select *WebSocket*
   - Provide any name for API Name
-  - Enter *$request.body.action* for Route Selection Expression
+  - Enter "**_$request.body.action_**" for Route Selection Expression
   - Create API
 - Create Route for Connect Handler Lamda Function
   - Select the Route Key **$connect**
   - Integration Type: Lambda Function
   - Type your Connect function name (*WSConnect*)
   - Save
-  - OK
+  - OK (in role permission message)
 - Create Route for Disconnect Handler Lamda Function
   - Select the Route Key **$disconnect**
   - Integration Type: Lambda Function
   - Type your Connect function name (*WSDisconnect*)
   - Save
-  - OK
+  - OK (in role permission message)
 - Create Route for Message Handler Lamda Function
   - Select the Route Key **$default**
   - Integration Type: Lambda Function
   - Type your Connect function name (*WSOnMessage*)
   - Save
-  - OK
+  - OK (in role permission message)
 - Deploy the API
   - Actions Deploy API
   - Deployment Stage: [New Stage]
-  - Stage Name: *bridge*
+  - Stage Name: "**_bridge_**" (this can be anything, make sure your url includes it when testing)
   - Deploy
 - Copy the API Gateway URL from the stages -- bridge example:  **wss://aaabbbccc123.execute-api.region.amazonaws.com/bridge**
 
@@ -125,13 +126,15 @@ Note:
   - Type in your message *{"topic":"Something", "message":"Some Data"}* push Send
   - Disconnect when done
 
-## Optional Items
+## Optional Items (if your Lambda runtime does not provide AWS.ApiGatewayManagementApi)
 
-### You can also try out the *optimized* version (Optional)
-- Connect creates the DynamoDB Table automatically if it doesn't exist see [Connect/index.optimized.js](Connect/index.optimized.js)
-  - first few connections may fail due to delay in creating the table and index
-- On Message uses a *query* instead of *scan* [OnMessage/index.optimized.js](OnMessage/index.optimized.js)
-- Disconnect is pretty much the same [Disconnect/index.js](Disconnect/index.js)
+### Steps for creating the declaration for AWS.ApiGatewayManagementApi (Optional)
+- [Console -- Lambda](https://console.aws.amazon.com/lambda/) -- Functions
+  - Select "**_WSOnMessage_**"
+  - In the editor **File -- New**
+  - Copy and paste the code from [OnMessage/apigwmgmtapi.2.455.0.js](OnMessage/apigwmgmtapi.2.455.0.js)
+  - Save the file **File -- Save** name apigwmgmtapi.2.455.0.js
+  - Save
 
 ### Steps for getting the latest aws-sdk as a *Lambda Layer* (Optional)
 - **Prerequisite: npm**
@@ -158,6 +161,11 @@ Note:
   - replace **~~const AWS = require('aws-sdk');~~**
   - with **const AWS = require('/opt/node-aws-sdk/node_modules/aws-sdk');**
 
+## You can also try out the *optimized* version (Optional)
+- Connect creates the DynamoDB Table automatically if it doesn't exist see [Connect/index.optimized.js](Connect/index.optimized.js)
+  - first few connections may fail due to delay in creating the table and index
+- On Message uses a *query* instead of *scan* [OnMessage/index.optimized.js](OnMessage/index.optimized.js)
+- Disconnect is pretty much the same [Disconnect/index.js](Disconnect/index.js)
 
 ## Thanks
 
