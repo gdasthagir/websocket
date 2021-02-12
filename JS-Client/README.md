@@ -2,7 +2,7 @@
 
 Test Client that can be used to connect to WebSocket Servers and send and receive data
 
-You can find a running version of this at http://ws.truly.technology
+You can find a running version of this at https://ws.truly.technology
 
 ## Getting Started
 
