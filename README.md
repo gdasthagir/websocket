@@ -24,7 +24,5 @@ Take a look at [Serverless/AWS-Lambda](Serverless/AWS-Lambda)
 ## JavaScript WebSocket Client
 Take a look at [JS-Client](JS-Client)
 
-Also at https://ws.truly.technology
-
 ** **
 *Need to take care of using secure protocol and scaling for actual use in an application*
